@@ -6,11 +6,16 @@ import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
+import javax.servlet.http.HttpServletResponse;
 import java.io.*;
+import java.net.URLEncoder;
 import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.Map;
 
+/**
+ * 文件上传下载
+ */
 @Controller
 @RequestMapping("/file")
 public class FileController {
@@ -115,6 +120,49 @@ public class FileController {
         return resultData;
     }
 
-
+    @RequestMapping("/downloadFile")
+    public void download(HttpServletResponse response) throws UnsupportedEncodingException {
+        String filename = "crs参数.txt";
+//        response.setCharacterEncoding("utf8");
+        response.setHeader("content-type", "application/octet-stream");
+        response.setContentType("text/html;charset=UTF-8");
+        // 文件名按照指定的编码格式编码一下,下载后文件名不会出现乱码问题
+        response.setHeader("Content-Disposition", "attachment;filename=" + URLEncoder.encode(filename, "UTF-8"));
+        byte[] bytes = new byte[1024];
+        BufferedInputStream bis = null;
+        OutputStream os = null;
+        try {
+            os = response.getOutputStream();
+            bis = new BufferedInputStream(new FileInputStream(new File(saveDir+filename)));
+            int i = bis.read(bytes);
+            while (i!=-1){
+                os.write(bytes,0,bytes.length);
+                os.flush();
+                i = bis.read(bytes);
+            }
+        } catch (IOException e) {
+            e.printStackTrace();
+        }finally {
+            if (bis!=null){
+                try {
+                    bis.close();
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }finally {
+                    bis = null;
+                }
+            }
+            if (os!=null){
+                try {
+                    os.close();
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }finally {
+                    os = null;
+                }
+            }
+            System.out.println("download successssssssssssssssss.");
+        }
+    }
 
 }
